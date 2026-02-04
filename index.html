@@ -1,0 +1,97 @@
+HTML
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Absen Selfie Wajib</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 400px; margin: auto; }
+    input, button { width: 100%; padding: 10px; margin-top: 10px; box-sizing: border-box; }
+    button { background: #007bff; color: white; border: none; font-weight: bold; cursor: pointer;}
+    button:disabled { background: #ccc; }
+    .preview { width: 100%; margin-top: 10px; display: none; border-radius: 8px;}
+  </style>
+</head>
+<body>
+
+  <h2>Form Absensi Selfie</h2>
+  
+  <label>Nama Lengkap:</label>
+  <input type="text" id="nama" placeholder="Masukkan nama..." required>
+
+  <label>Foto Selfie (Wajib Kamera Depan):</label>
+  <input type="file" id="foto" accept="image/*" capture="user" required onchange="previewFoto()">
+  
+  <img id="previewImg" class="preview" alt="Preview Foto">
+
+  <button id="btnKirim" onclick="kirimData()">KIRIM ABSEN</button>
+  <p id="status"></p>
+
+  <script>
+    // GANTI URL DI BAWAH DENGAN WEB APP URL DARI GOOGLE APPS SCRIPT KAMU
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxhUSv99dgKj7j42W3rzseiuWc7M9b6q2SBbAGocxaeD52ivPg-3nvaK4MUgzNWfhHY/exec'; 
+
+    let base64Foto = "";
+
+    function previewFoto() {
+      const fileInput = document.getElementById('foto');
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onloadend = function() {
+        base64Foto = reader.result;
+        document.getElementById('previewImg').src = base64Foto;
+        document.getElementById('previewImg').style.display = "block";
+      }
+
+      if (file) {
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function kirimData() {
+      const nama = document.getElementById('nama').value;
+      const btn = document.getElementById('btnKirim');
+      const status = document.getElementById('status');
+
+      if (!nama || !base64Foto) {
+        alert("Nama dan Foto wajib diisi!");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = "Sedang Mengirim...";
+
+      const dataKirim = {
+        nama: nama,
+        foto: base64Foto
+      };
+
+      fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors', // Penting untuk menghindari error CORS browser
+        body: JSON.stringify(dataKirim),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(response => {
+        status.innerHTML = "✅ Berhasil terkirim!";
+        btn.innerHTML = "Terkirim";
+        alert("Absen Sukses!");
+        // Reset form jika perlu
+        document.getElementById('nama').value = "";
+        document.getElementById('foto').value = "";
+        document.getElementById('previewImg').style.display = "none";
+        base64Foto = "";
+        btn.disabled = false;
+        btn.innerHTML = "KIRIM ABSEN";
+      })
+      .catch(error => {
+        status.innerHTML = "❌ Gagal: " + error.message;
+        btn.disabled = false;
+        btn.innerHTML = "KIRIM ABSEN";
+      });
+    }
+  </script>
+
+</body>
+</html>
